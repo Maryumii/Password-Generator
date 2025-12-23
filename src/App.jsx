@@ -1,113 +1,86 @@
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function App() {
-  const [pass, setPass] = useState("");
-  const [checked, setChecked] = useState(false); //numbers
-  const [checkedCh, setCheckedCh] = useState(false); //characters
-  const [isRange, setRange] = useState(8);
+  const [password, setPassword] = useState("");
+  const [length, setLength] = useState(8);
+  const [addNumbers, setNumbers] = useState(false);
+  const [addSymbols, setSymbols] = useState(false);
 
-  // useRef to copy to clipboard
-  const passwordRef = useRef(null);
+  //useRef hook
+  const refPass = useRef(null);
 
-  const copyToClipboard = () => {
-    passwordRef.current?.select();
-    window.navigator.clipboard.writeText(pass);
-  };
+  const passwordGenerator = useCallback(() => {
+    let pass = "";
+    let str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-  const handleCheck = (v) => {
-    setChecked(v);
-  };
-  const handleCheckCharacters = (v) => {
-    setCheckedCh(v);
-  };
-  const handleRange = (e) => {
-    let num = e.target.value;
-    setRange(num);
-  };
+    if (addNumbers) str += "0123456789";
+    if (addSymbols) str += '!@#$%^&*()-=?>|<":}{';
 
-  const updateString = () => {
-    let ch = "abcdefghijklmnoyzABCDEFGHIPQRSTUVWXYZ";
-
-    // Numbers checkbox
-    if (checked === true) {
-      let num = "0123456789";
-      ch = ch + num;
+    for (let i = 0; i < length; i++) {
+      let index = Math.floor(Math.random() * str.length);
+      pass += str.charAt(index);
     }
+    setPassword(pass);
+  }, [length, addNumbers, addSymbols, setPassword]);
 
-    // Characters checkbox
-    if (checkedCh === true) {
-      let specialCh = "?|><{}!@#$%&*,;:-=";
-      ch = ch + specialCh;
-    }
-
-    // range change logic
-    let tillRange;
-    if (isRange !== 8) {
-      tillRange = isRange;
-    } else {
-      tillRange = 8;
-    }
-
-    //testing values
-    console.log(checked);
-    console.log("length: ", ch.length);
-    console.log("range also ----- ", tillRange);
-
-    let val = "";
-    for (let i = 0; i < tillRange; i++) {
-      let randomIndex = Math.floor(Math.random() * ch.length);
-      val = val + ch[randomIndex];
-    }
-    setPass(val);
-  };
+  const copyToClipboard = useCallback(() => {
+    refPass.current?.select();
+    window.navigator.clipboard.writeText(password);
+  }, [password]);
 
   useEffect(() => {
-    updateString();
-  }, [checked, checkedCh, isRange]);
+    passwordGenerator();
+  }, [length, addNumbers, addSymbols, passwordGenerator]);
 
   return (
     <>
-      <div className="flex justify-center m-3.5 text-gray-100 pt-10">
-        <div className="flex flex-col gap-3 border h-24 p-4 bg-gray-900 border-amber-950 items-center justify-center rounded-xl">
-          <div>
-            <input
-              type="text"
-              id="myInput"
-              value={pass}
-              ref={passwordRef}
-              readOnly
-              className="outline-none w-80 py-0.5 px-1 bg-gray-100 text-gray-950"
-            />
-            <button
-              onClick={copyToClipboard}
-              className="bg-blue-900 text-white rounded-r-xl px-5 py-0.5"
-            >
-              Copy
-            </button>
-          </div>
+      <div className="bg-gray-800 h-screen w-full pt-10">
+        <div className="border-2 border-gray-700 w-full max-w-md mx-auto rounded-lg px-4 py-3 my-8 bg-gray-900 text-gray-300">
+          <div className="mx-1.5 flex flex-col gap-2.5">
+            <h1>Password Generator</h1>
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                value={password}
+                ref={refPass}
+                className="border border-gray-700 rounded-l-lg rounded-r-none w-full py-1 px-3"
+                readOnly
+              />
+              <button
+                onClick={copyToClipboard}
+                className=" bg-green-600 hover:bg-green-800 rounded-r-lg rounded-l-none px-2 py-0.5 font-bold"
+              >
+                copy
+              </button>
+            </div>
 
-          <div className="flex gap-1.5">
+            <label htmlFor="rangeChange">Length ({length})</label>
             <input
               type="range"
-              min="0"
-              max="20"
-              defaultValue={isRange}
-              onChange={(e) => handleRange(e)}
-              className=""
-            ></input>
-            <span>Length({isRange})</span>
-            <input
-              type="checkbox"
-              id="myCheck"
-              onChange={() => handleCheck(!checked)}
-            ></input>
-            <span>Numbers</span>
-            <input
-              type="checkbox"
-              id="myCheck"
-              onChange={() => handleCheckCharacters(!checkedCh)}
+              min="6"
+              max="50"
+              value={length}
+              onChange={(e) => setLength(e.target.value)}
+              className="accent-green-600 w-full cursor-pointer "
             />
-            <span>Characters</span>
+
+            <div className="flex justify-between">
+              <label htmlFor="numberInput">Numbers</label>
+              <input
+                type="checkbox"
+                onChange={() => setNumbers((prev) => !prev)}
+                className="accent-green-600"
+              />
+            </div>
+
+            <div className="flex justify-between">
+              <label htmlFor="symbolInput">Symbols</label>
+              <input
+                type="checkbox"
+                onChange={() => setSymbols((prev) => !prev)}
+                className="accent-green-600"
+              />
+            </div>
           </div>
         </div>
       </div>
